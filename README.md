@@ -2,7 +2,7 @@
 
 A simple ~6m monohull daysailer that exercises the [shipshape](../shipshape) library's pipeline.
 
-**Website:** deployed via GitHub Pages (see `.github/workflows/pages.yml`)
+**Website:** [shipshape-marine.github.io/keelboat](https://shipshape-marine.github.io/keelboat/)
 
 ## Pipeline
 
