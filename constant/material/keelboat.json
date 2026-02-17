@@ -1,0 +1,72 @@
+{
+  "scheme_name": "Keelboat Standard Materials",
+  "description": "Material properties for a fiberglass daysailer",
+  "version": "1.0",
+  "materials": {
+    "fiberglass": {
+      "name": "Fiberglass",
+      "color": [0.95, 0.95, 0.98],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 1800,
+      "description": "Fiberglass layup for hull shell and deck"
+    },
+    "lead": {
+      "name": "Lead",
+      "color": [0.45, 0.45, 0.48],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 11340,
+      "description": "Lead ballast keel"
+    },
+    "aluminum": {
+      "name": "Aluminum",
+      "color": [0.75, 0.75, 0.78],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 2700,
+      "description": "Aluminum spars (mast, boom)"
+    },
+    "wood": {
+      "name": "Wood",
+      "color": [0.66, 0.50, 0.32],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 600,
+      "description": "Wood rudder blade and trim"
+    },
+    "foam": {
+      "name": "Foam",
+      "color": [1.0, 0.85, 0.0],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 60,
+      "description": "Closed-cell flotation foam"
+    },
+    "air": {
+      "name": "Air",
+      "color": [0.0, 0.0, 0.0],
+      "transparency": 100,
+      "display_mode": "Shaded",
+      "density_kg_m3": 1.2,
+      "buoyancy_only": true,
+      "description": "Trapped air inside hull (for buoyancy)"
+    },
+    "canvas": {
+      "name": "Canvas",
+      "color": [0.95, 0.92, 0.85],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 600,
+      "description": "Sail material"
+    },
+    "stainless_steel": {
+      "name": "Stainless Steel",
+      "color": [0.85, 0.85, 0.87],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 8000,
+      "description": "Stainless steel rudder stock and hardware"
+    }
+  }
+}

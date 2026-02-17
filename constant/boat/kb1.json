@@ -1,0 +1,49 @@
+{
+  "boat_name": "kb1",
+  "boat_description": "KB1 - 6m fiberglass daysailer with fin keel",
+
+  "loa": 6100,
+  "lwl": 5600,
+  "beam": 2200,
+  "draft": 1200,
+  "freeboard": 600,
+
+  "hull_length": 6100,
+  "hull_beam": 2200,
+  "hull_depth": 900,
+  "hull_thickness": 8,
+
+  "hull_sections": 7,
+  "hull_bow_fraction": 0.15,
+  "hull_stern_fraction": 0.10,
+
+  "keel_root_chord": 800,
+  "keel_tip_chord": 400,
+  "keel_span": 900,
+  "keel_thickness_ratio": 0.12,
+  "keel_sweep_deg": 5,
+
+  "rudder_chord": 300,
+  "rudder_span": 600,
+  "rudder_thickness": 20,
+  "rudder_stock_diameter": 30,
+  "rudder_stock_length": 800,
+  "rudder_offset_from_stern": 200,
+
+  "mast_height": 8000,
+  "mast_diameter": 100,
+  "mast_thickness": 4,
+  "mast_position_from_bow": 2400,
+
+  "boom_length": 2500,
+  "boom_diameter": 75,
+  "boom_thickness": 3,
+  "boom_height_above_deck": 1200,
+
+  "deck_level": 900,
+
+  "foam_block_length": 1200,
+  "foam_block_width": 600,
+  "foam_block_height": 300,
+  "foam_block_y_position": 2000
+}

@@ -1,0 +1,6 @@
+artifact/
+*.FCStd
+*.FCStd1
+__pycache__/
+*.pyc
+*.pyo
