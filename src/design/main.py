@@ -181,12 +181,16 @@ def interp_table(frac):
     return hull_shape_table[-1][1], hull_shape_table[-1][2]
 
 
-# Use more sections for smoother ends
-num_sections = max(num_sections, 11)
+# Non-uniform section spacing: denser at bow to prevent loft overshoot.
+# Uniform base + extra fractions in the rapidly-tapering bow region.
+n_base = max(num_sections, 11)
+fracs = [i / (n_base - 1) for i in range(n_base)]
+fracs += [0.88, 0.92, 0.96, 0.98]  # extra bow sections
+fracs = sorted(set(fracs))
+
 outer_wires = []
 inner_wires = []
-for i in range(num_sections):
-    frac = i / (num_sections - 1)  # 0 = stern, 1 = bow
+for frac in fracs:
     y_pos = -half_length + frac * hull_length
     bf, df = interp_table(frac)
     hw = max(half_beam * bf, hull_thickness * 2)
@@ -219,23 +223,33 @@ except Exception as e:
         App.Rotation())
 
 # ============================================================================
+# TRANSOM - Flat stern closure
+# ============================================================================
+
+print("Creating transom...")
+transom_face = Part.Face(outer_wires[0])  # stern section = first wire
+transom_solid = transom_face.extrude(Base.Vector(0, -hull_thickness, 0))
+
+transom_obj = vessel.newObject("Part::Feature", "Transom__fiberglass")
+transom_obj.Shape = transom_solid
+transom_obj.Placement = App.Placement(
+    Base.Vector(0, 0, params['deck_level']),
+    App.Rotation())
+print(f"  Transom: volume = {transom_solid.Volume / 1e6:.2f} liters")
+
+# ============================================================================
 # DECK - Flat surface at sheer line
 # ============================================================================
 
 print("Creating deck...")
 deck_thickness = hull_thickness
-# Use an elliptical deck plan shape
-n_deck_pts = 24
-deck_points = []
-for i in range(n_deck_pts + 1):
-    angle = 2 * math.pi * i / n_deck_pts
-    x = half_beam * 0.95 * math.cos(angle)
-    y = half_length * 0.95 * math.sin(angle)
-    deck_points.append(Base.Vector(x, y, 0))
-
-deck_wire = Part.makePolygon(deck_points + [deck_points[0]])
-deck_face = Part.Face(deck_wire)
+# Slice the outer hull just below the sheer line to get the exact planform.
+# Using -0.5mm avoids the degenerate boundary at z=0.
+deck_wires = outer_loft.slice(Base.Vector(0, 0, 1), -0.5)
+deck_face = Part.Face(Part.Wire(deck_wires))
+# Extrude upward from z=0
 deck_solid = deck_face.extrude(Base.Vector(0, 0, deck_thickness))
+deck_solid = deck_solid.translated(Base.Vector(0, 0, 0.5))  # shift back to z=0
 
 deck_obj = vessel.newObject("Part::Feature", "Deck__fiberglass")
 deck_obj.Shape = deck_solid
