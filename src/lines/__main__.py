@@ -667,7 +667,7 @@ def generate_latex(boat_name, config_name, params, sections, waterlines,
 \\section*{{Lines Plan of {boat_name.upper()}}}
 
 \\noindent
-\\begin{{minipage}}[t]{{0.32\\textwidth}}
+\\begin{{minipage}}[t]{{0.25\\textwidth}}
 \\subsection*{{Profile}}
 \\IfFileExists{{{base_name}.profile.full.pdf}}{{%
 \\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.profile.full.pdf}}
