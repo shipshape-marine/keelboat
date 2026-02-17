@@ -1,5 +1,6 @@
-# Makefile for Keelboat Toy Project
-# Pipeline: parameter → design → mass → buoyancy → gz
+# Makefile for Keelboat Project
+# Pipeline: parameter → design → color → mass → buoyancy → gz
+# Additional: render, lines, lines-pdf, sync-docs, localhost
 
 # ==============================================================================
 # PLATFORM DETECTION AND FREECAD CONFIGURATION
@@ -12,13 +13,15 @@ FREECAD_BUNDLE := /Applications/FreeCAD.app
 
 ifeq ($(UNAME),Darwin)
 	FREECAD_CMD := $(FREECAD_APP) --console
+	FREECAD_PYTHON := $(FREECAD_BUNDLE)/Contents/Resources/bin/python
 	FILTER_NOISE := 2>&1 | grep -v "3DconnexionNavlib" | grep -v "^$$"
 	CONDA_PYTHON := /Users/henz/anaconda3/envs/freecad/bin/python
 	FREECAD_LIB := /Users/henz/anaconda3/envs/freecad/lib
 else
 	FREECAD_CMD := xvfb-run -a freecadcmd
+	FREECAD_PYTHON := freecad-python
 	FILTER_NOISE :=
-	CONDA_PYTHON := freecad-python
+	CONDA_PYTHON := $(FREECAD_PYTHON)
 	FREECAD_LIB :=
 endif
 
@@ -62,15 +65,21 @@ all: gz
 help:
 	@echo "Keelboat Project Makefile"
 	@echo ""
-	@echo "Pipeline: parameter → design → mass → buoyancy → gz"
+	@echo "Pipeline: parameter → design → color → mass → buoyancy → gz"
 	@echo ""
 	@echo "Targets:"
 	@echo "  make parameter  - Compute derived parameters"
 	@echo "  make design     - Generate FreeCAD model"
+	@echo "  make color      - Apply color scheme to design"
 	@echo "  make mass       - Analyze mass properties"
 	@echo "  make buoyancy   - Find buoyancy equilibrium"
 	@echo "  make gz         - Compute GZ righting arm curve"
+	@echo "  make render     - Render images from colored design"
+	@echo "  make lines      - Generate lines plan (SVGs)"
+	@echo "  make lines-pdf  - Compile lines plan LaTeX to PDF"
 	@echo "  make all        - Run full pipeline"
+	@echo "  make sync-docs  - Copy artifacts to docs/"
+	@echo "  make localhost  - Serve website locally"
 	@echo "  make clean      - Remove generated files"
 	@echo ""
 	@echo "Variables:"
@@ -213,3 +222,130 @@ $(GZ_ARTIFACT): $(BUOYANCY_ARTIFACT) $(DESIGN_ARTIFACT) $(PARAMETER_ARTIFACT) | 
 
 .PHONY: gz
 gz: $(GZ_ARTIFACT)
+
+# ==============================================================================
+# RENDER THE COLORED DESIGN
+# ==============================================================================
+
+RENDER_DIR := $(SRC_DIR)/render
+RENDER_SOURCE := $(wildcard $(RENDER_DIR)/*.py)
+
+.PHONY: render
+render: $(COLOR_ARTIFACT) $(RENDER_SOURCE)
+	@echo "Rendering images from $(COLOR_ARTIFACT)..."
+	@if [ "$(UNAME)" = "Darwin" ]; then \
+		$(RENDER_DIR)/render_mac.sh "$(COLOR_ARTIFACT)" "$(ARTIFACT_DIR)" "$(FREECAD_APP)"; \
+	else \
+		FCSTD_FILE="$(COLOR_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" freecad-python -m src.render; \
+	fi
+	@echo "Cropping images with ImageMagick..."
+	@if command -v convert >/dev/null 2>&1; then \
+		for img in $(ARTIFACT_DIR)/*.render.*.png; do \
+			if [ -f "$$img" ]; then \
+				convert "$$img" -fuzz 1% -trim +repage -bordercolor \#C6D2FF -border 25 "$$img" || true; \
+			fi \
+		done; \
+		echo "Cropping complete!"; \
+	else \
+		echo "ImageMagick not found, skipping crop"; \
+	fi
+	@echo "✓ Render complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# LINES PLAN - TRADITIONAL NAVAL ARCHITECTURE DRAWINGS
+# ==============================================================================
+
+LINES_DIR := $(SRC_DIR)/lines
+LINES_SOURCE := $(wildcard $(LINES_DIR)/*.py)
+LINES_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).lines.FCStd
+LINES_TEX := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).lines.tex
+LINES_PDF := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).lines.pdf
+
+$(LINES_ARTIFACT) $(LINES_TEX): $(DESIGN_ARTIFACT) $(PARAMETER_ARTIFACT) $(LINES_SOURCE) | $(ARTIFACT_DIR)
+	@echo "Generating lines plan: $(BOAT).$(CONFIGURATION)"
+	@if [ "$(UNAME)" = "Darwin" ]; then \
+		bash $(LINES_DIR)/lines_mac.sh \
+			"$(DESIGN_ARTIFACT)" \
+			"$(PARAMETER_ARTIFACT)" \
+			"$(ARTIFACT_DIR)" \
+			"$(FREECAD_APP)"; \
+	else \
+		PYTHONPATH=$(PWD) \
+		DESIGN_FILE=$(DESIGN_ARTIFACT) \
+		PARAMETER_FILE=$(PARAMETER_ARTIFACT) \
+		OUTPUT_DIR=$(ARTIFACT_DIR) \
+		$(FREECAD_PYTHON) -m src.lines; \
+	fi
+
+.PHONY: lines
+lines: $(LINES_ARTIFACT)
+	@echo "✓ Lines plan complete for $(BOAT).$(CONFIGURATION)"
+
+$(LINES_PDF): $(LINES_TEX)
+	@echo "Converting SVGs to PDF for LaTeX inclusion..."
+	@for svg in $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).lines.*.svg; do \
+		if [ -f "$$svg" ]; then \
+			pdf=$${svg%.svg}.pdf; \
+			if command -v rsvg-convert >/dev/null 2>&1; then \
+				rsvg-convert -f pdf -o "$$pdf" "$$svg" 2>/dev/null || true; \
+			elif command -v inkscape >/dev/null 2>&1; then \
+				inkscape "$$svg" --export-filename="$$pdf" 2>/dev/null || true; \
+			fi; \
+		fi; \
+	done
+	@echo "Compiling lines plan LaTeX: $(BOAT).$(CONFIGURATION)"
+	@cd $(ARTIFACT_DIR) && pdflatex -interaction=nonstopmode $(notdir $(LINES_TEX)) || true
+	@cd $(ARTIFACT_DIR) && pdflatex -interaction=nonstopmode $(notdir $(LINES_TEX)) || true
+	@if [ -f "$(LINES_PDF)" ]; then \
+		echo "✓ Lines plan PDF: $(LINES_PDF)"; \
+	else \
+		echo "Warning: PDF generation failed (pdflatex may not be installed)"; \
+	fi
+
+.PHONY: lines-pdf
+lines-pdf: $(LINES_PDF)
+	@echo "✓ Lines plan PDF complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# DOCS SYNC AND LOCAL PREVIEW
+# ==============================================================================
+
+.PHONY: sync-docs
+sync-docs:
+	@echo "Syncing artifacts to docs folders..."
+	@mkdir -p docs/_data docs/renders docs/downloads docs/lines
+	@# Copy JSON files with dots→underscores renaming
+	@for file in artifact/*.json; do \
+		if [ -f "$$file" ]; then \
+			basename=$$(basename "$$file" .json); \
+			newname=$$(echo "$$basename" | tr '.' '_'); \
+			cp "$$file" "docs/_data/$${newname}.json"; \
+		fi \
+	done
+	@echo "  Copied $$(ls artifact/*.json 2>/dev/null | wc -l | tr -d ' ') JSON files to docs/_data/"
+	@# Copy PNG renders
+	@if ls artifact/*.png 1>/dev/null 2>&1; then \
+		cp artifact/*.png docs/renders/; \
+		echo "  Copied $$(ls artifact/*.png | wc -l | tr -d ' ') PNG files to docs/renders/"; \
+	fi
+	@# Copy lines plan SVGs
+	@if ls artifact/*.svg 1>/dev/null 2>&1; then \
+		cp artifact/*.svg docs/lines/; \
+		echo "  Copied $$(ls artifact/*.svg | wc -l | tr -d ' ') SVG files to docs/lines/"; \
+	fi
+	@# Copy lines plan PDFs
+	@if ls artifact/*.pdf 1>/dev/null 2>&1; then \
+		cp artifact/*.pdf docs/lines/; \
+		echo "  Copied $$(ls artifact/*.pdf | wc -l | tr -d ' ') PDF files to docs/lines/"; \
+	fi
+	@# Copy downloads (FCStd files)
+	@if ls artifact/*.FCStd 1>/dev/null 2>&1; then \
+		cp artifact/*.FCStd docs/downloads/; \
+		echo "  Copied $$(ls artifact/*.FCStd | wc -l | tr -d ' ') FCStd files to docs/downloads/"; \
+	fi
+	@echo "✓ Docs sync complete"
+
+.PHONY: localhost
+localhost: sync-docs
+	@echo "Serving website at localhost:4000..."
+	cd docs; bundle exec jekyll serve

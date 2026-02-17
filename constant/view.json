@@ -1,0 +1,18 @@
+{
+  "front": {
+    "display_name": "Back",
+    "freecad_method": "viewFront"
+  },
+  "isometric": {
+    "display_name": "Isometric",
+    "freecad_method": "viewIsometric"
+  },
+  "right": {
+    "display_name": "Right",
+    "freecad_method": "viewRight"
+  },
+  "top": {
+    "display_name": "Top",
+    "freecad_method": "viewTop"
+  }
+}

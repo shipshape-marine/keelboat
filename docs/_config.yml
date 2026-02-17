@@ -1,0 +1,20 @@
+title: Keelboat
+description: Parametric Keelboat Design
+theme: jekyll-theme-cayman
+baseurl: ""
+url: ""
+
+# Build settings
+markdown: kramdown
+
+# Include additional directories for GitHub Pages
+include:
+  - renders
+  - downloads
+  - lines
+
+# Project metadata
+project:
+  coordinator: "A/Prof Martin Henz"
+  institution: "School of Computing, National University of Singapore"
+  email: "henz@nus.edu.sg"

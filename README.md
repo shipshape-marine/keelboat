@@ -1,22 +1,30 @@
-# Keelboat Toy Project
+# Keelboat
 
-A simple ~6m monohull daysailer that exercises the [shipshape](../shipshape) library's pipeline:
+A simple ~6m monohull daysailer that exercises the [shipshape](../shipshape) library's pipeline.
+
+**Website:** deployed via GitHub Pages (see `.github/workflows/pages.yml`)
+
+## Pipeline
 
 ```
-parameter → design → mass → buoyancy → gz
+parameter → design → color → mass → buoyancy → gz
+                 ↓                              ↓
+              render                         GZ curve
+                 ↓
+              lines → lines-pdf
 ```
 
 ## Quick Start
 
 ```bash
-make parameter   # compute derived parameters
-make design      # generate FreeCAD model (requires FreeCAD)
-make mass        # analyze mass properties
-make buoyancy    # find buoyancy equilibrium
-make gz          # compute GZ righting arm curve
+make all         # full pipeline: parameter → design → mass → buoyancy → gz
+make color       # apply color scheme
+make render      # generate PNG renders (requires color)
+make lines       # generate lines plan SVGs (requires design)
+make lines-pdf   # compile lines plan LaTeX to PDF
+make sync-docs   # copy artifacts to docs/
+make localhost   # serve website at localhost:4000
 ```
-
-Or run the full pipeline: `make all`
 
 ## Boat: KB1
 
@@ -34,10 +42,20 @@ keelboat/
 ├── constant/
 │   ├── boat/kb1.json                 # Boat dimensions
 │   ├── configuration/upwind.json     # Sailing configuration
-│   ├── material/keelboat.json        # Material properties (8 materials)
-│   └── hull_groups.json              # Single "hull" group
+│   ├── material/keelboat.json        # Material properties
+│   ├── hull_groups.json              # Single "hull" group
+│   └── view.json                     # Render view definitions
 ├── src/
 │   ├── parameter/compute.py          # Keelboat-specific derived parameters
-│   └── design/main.py               # FreeCAD geometry generator
+│   ├── design/main.py                # FreeCAD geometry generator
+│   ├── color/                        # Color scheme application
+│   ├── render/                       # PNG render export
+│   └── lines/                        # Lines plan generation (SVG + LaTeX)
+├── docs/                             # Jekyll website (GitHub Pages)
+│   ├── _config.yml
+│   ├── _layouts/default.html
+│   ├── index.md                      # Single-page site
+│   └── Gemfile
+├── .github/workflows/pages.yml       # CI/CD: build pipeline + deploy to Pages
 └── artifact/                         # Generated outputs (gitignored)
 ```

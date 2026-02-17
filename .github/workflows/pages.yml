@@ -1,0 +1,154 @@
+name: Build and Deploy GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache FreeCAD AppImage
+        id: cache-freecad
+        uses: actions/cache@v3
+        with:
+          path: |
+            FreeCAD.AppImage
+            squashfs-root
+          key: freecad-1.0.0-appimage
+
+      - name: Install FreeCAD AppImage
+        if: steps.cache-freecad.outputs.cache-hit != 'true'
+        run: |
+          # Download FreeCAD 1.0.0 AppImage
+          wget -O FreeCAD.AppImage https://github.com/FreeCAD/FreeCAD-Bundle/releases/download/1.0.0/FreeCAD_1.0.0-conda-Linux-x86_64-py311.AppImage
+          chmod +x FreeCAD.AppImage
+
+          # Extract AppImage
+          ./FreeCAD.AppImage --appimage-extract
+
+      - name: Setup FreeCAD environment
+        run: |
+          # Install xvfb for headless rendering and ImageMagick for cropping
+          sudo apt-get update
+          sudo apt-get install -y xvfb imagemagick
+
+          # Create wrapper for running FreeCAD in console mode (for builds)
+          cat > freecadcmd << 'WRAPPER_EOF'
+          #!/bin/bash
+          xvfb-run -a ./squashfs-root/usr/bin/freecad --console "$@"
+          WRAPPER_EOF
+          chmod +x freecadcmd
+
+          # Create wrapper for running Python scripts with FreeCAD modules (for renders)
+          cat > freecad-python << 'WRAPPER_EOF'
+          #!/bin/bash
+          export FREECAD_USER_HOME=/tmp/freecad
+          export LD_LIBRARY_PATH=./squashfs-root/usr/lib:$LD_LIBRARY_PATH
+          export PYTHONPATH=./squashfs-root/usr/lib:./squashfs-root/usr/Mod:$PYTHONPATH
+          mkdir -p $FREECAD_USER_HOME
+          xvfb-run -a ./squashfs-root/usr/bin/python "$@"
+          WRAPPER_EOF
+          chmod +x freecad-python
+
+          # Add to PATH
+          echo "$PWD" >> $GITHUB_PATH
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          # Also install shipshape into FreeCAD's bundled Python
+          ./squashfs-root/usr/bin/python -m pip install "shipshape>=0.7.0"
+
+      - name: Install TeX Live and SVG tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y texlive texlive-fonts-extra latexmk librsvg2-bin
+
+      - name: Build all pipeline stages
+        run: |
+          make all
+
+      - name: Generate renders
+        run: |
+          make render
+
+      - name: Generate lines plan
+        run: |
+          make lines
+
+      - name: Compile lines plan PDF
+        run: |
+          make lines-pdf
+
+      - name: Sync artifacts to docs
+        run: |
+          make sync-docs
+
+      - name: Verify files before Jekyll build
+        run: |
+          echo "=== Files in docs/renders/ ==="
+          ls -lh docs/renders/ || echo "No renders directory"
+          echo ""
+          echo "=== Files in docs/downloads/ ==="
+          ls -lh docs/downloads/ || echo "No downloads directory"
+          echo ""
+          echo "=== Files in docs/_data/ ==="
+          ls -lh docs/_data/ || echo "No _data directory"
+          echo ""
+          echo "=== Files in docs/lines/ ==="
+          ls -lh docs/lines/ || echo "No lines directory"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          working-directory: ./docs
+
+      - name: Install Jekyll dependencies
+        run: |
+          cd docs
+          bundle install
+
+      - name: Build Jekyll site
+        run: |
+          cd docs
+          bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+          PAGES_REPO_NWO: ${{ github.repository }}
+          JEKYLL_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Jekyll site build
+        run: |
+          echo "=== Jekyll _site structure ==="
+          ls -la docs/_site/
+          echo ""
+          echo "=== Check for renders in _site ==="
+          ls -lh docs/_site/renders/ || echo "No renders in _site"
+          echo ""
+          echo "=== Check for downloads in _site ==="
+          ls -lh docs/_site/downloads/ || echo "No downloads in _site"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
