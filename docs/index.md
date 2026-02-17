@@ -53,17 +53,17 @@ title: Keelboat - Parametric Keelboat Design
 
 <div style="margin: 2em 0;">
   <h3>Profile (Sheer Plan)</h3>
-  <img src="{{ '/lines/kb1.upwind.lines.profile.svg' | relative_url }}" alt="Profile View" style="width: 100%; max-width: 1000px; background: white; padding: 1em; border: 1px solid #ddd; border-radius: 8px;">
+  <img src="{{ '/lines/kb1.upwind.lines.profile.full.svg' | relative_url }}" alt="Profile View" style="width: 100%; max-width: 1000px; background: white; padding: 1em; border: 1px solid #ddd; border-radius: 8px;">
 </div>
 
 <div style="margin: 2em 0;">
   <h3>Body Plan (Cross Sections)</h3>
-  <img src="{{ '/lines/kb1.upwind.lines.bodyplan.svg' | relative_url }}" alt="Body Plan" style="width: 100%; max-width: 600px; background: white; padding: 1em; border: 1px solid #ddd; border-radius: 8px;">
+  <img src="{{ '/lines/kb1.upwind.lines.bodyplan.full.svg' | relative_url }}" alt="Body Plan" style="width: 100%; max-width: 600px; background: white; padding: 1em; border: 1px solid #ddd; border-radius: 8px;">
 </div>
 
 <div style="margin: 2em 0;">
-  <h3>Half-Breadth Plan (Waterlines)</h3>
-  <img src="{{ '/lines/kb1.upwind.lines.halfbreadth.svg' | relative_url }}" alt="Half-Breadth Plan" style="width: 100%; max-width: 1000px; background: white; padding: 1em; border: 1px solid #ddd; border-radius: 8px;">
+  <h3>Full-Breadth Plan (Waterlines)</h3>
+  <img src="{{ '/lines/kb1.upwind.lines.fullbreadth.svg' | relative_url }}" alt="Full-Breadth Plan" style="width: 100%; max-width: 1000px; background: white; padding: 1em; border: 1px solid #ddd; border-radius: 8px;">
 </div>
 
 <p><a href="{{ '/lines/kb1.upwind.lines.pdf' | relative_url }}">Download full lines plan (PDF)</a></p>

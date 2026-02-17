@@ -1,6 +1,6 @@
 # Keelboat
 
-A simple ~6m monohull daysailer that exercises the [shipshape](../shipshape) library's pipeline.
+A simple ~6m monohull daysailer that exercises the [shipshape](https://pypi.org/project/shipshape/) library's pipeline.
 
 **Website:** [shipshape-marine.github.io/keelboat](https://shipshape-marine.github.io/keelboat/)
 

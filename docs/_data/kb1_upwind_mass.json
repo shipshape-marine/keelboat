@@ -1,0 +1,90 @@
+{
+  "validator": "mass",
+  "total_mass_kg": 825.82,
+  "total_volume_liters": 5149.02,
+  "total_unsinkable_volume_liters": 234.89,
+  "total_unsinkable_displacement_saltwater_kg": 240.76,
+  "materials": {
+    "air": {
+      "mass_kg": 5.9,
+      "volume_liters": 4914.13
+    },
+    "aluminum": {
+      "mass_kg": 30.64,
+      "volume_liters": 11.35
+    },
+    "fiberglass": {
+      "mass_kg": 321.42,
+      "volume_liters": 178.56
+    },
+    "lead": {
+      "mass_kg": 457.23,
+      "volume_liters": 40.32
+    },
+    "stainless_steel": {
+      "mass_kg": 8.48,
+      "volume_liters": 1.06
+    },
+    "wood": {
+      "mass_kg": 2.16,
+      "volume_liters": 3.6
+    }
+  },
+  "components": [
+    {
+      "name": "Keel__lead",
+      "mass_kg": 457.23,
+      "volume_liters": 40.32,
+      "material": "Lead"
+    },
+    {
+      "name": "Hull_Shell__fiberglass",
+      "mass_kg": 172.37,
+      "volume_liters": 95.76,
+      "material": "Fiberglass"
+    },
+    {
+      "name": "Deck__fiberglass",
+      "mass_kg": 141.4,
+      "volume_liters": 78.55,
+      "material": "Fiberglass"
+    },
+    {
+      "name": "Mast__aluminum",
+      "mass_kg": 26.06,
+      "volume_liters": 9.65,
+      "material": "Aluminum"
+    },
+    {
+      "name": "Rudder_Stock__stainless_steel",
+      "mass_kg": 8.48,
+      "volume_liters": 1.06,
+      "material": "Stainless Steel"
+    },
+    {
+      "name": "Transom__fiberglass",
+      "mass_kg": 7.65,
+      "volume_liters": 4.25,
+      "material": "Fiberglass"
+    },
+    {
+      "name": "Air_Inside__air",
+      "mass_kg": 5.9,
+      "volume_liters": 4914.13,
+      "material": "Air"
+    },
+    {
+      "name": "Boom__aluminum",
+      "mass_kg": 4.58,
+      "volume_liters": 1.7,
+      "material": "Aluminum"
+    },
+    {
+      "name": "Rudder_Blade__wood",
+      "mass_kg": 2.16,
+      "volume_liters": 3.6,
+      "material": "Wood"
+    }
+  ],
+  "component_count": 9
+}

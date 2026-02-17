@@ -155,12 +155,18 @@ def hull_section_wire_inner(y_pos, hw, hd, thickness):
 hull_shape_table = [
     # frac   beam_frac  depth_frac
     (0.00,   0.60,      0.70),   # stern (wide transom)
-    (0.15,   0.75,      0.85),   # aft quarter
+    (0.07,   0.67,      0.77),   # aft of stern quarter
+    (0.15,   0.75,      0.85),   # stern quarter
+    (0.22,   0.83,      0.90),   # aft of midships
     (0.30,   0.90,      0.95),   # approaching midships
+    (0.38,   0.96,      0.98),   # just aft of max beam
     (0.45,   1.00,      1.00),   # max beam (slightly forward of midships)
     (0.55,   1.00,      1.00),   # max beam
+    (0.62,   0.92,      0.96),   # forward of max beam
     (0.70,   0.80,      0.90),   # forward quarter
+    (0.77,   0.65,      0.80),   # approaching bow
     (0.85,   0.45,      0.65),   # bow transition
+    (0.90,   0.30,      0.52),   # bow narrowing
     (0.95,   0.15,      0.40),   # near bow
     (1.00,   0.02,      0.20),   # bow point
 ]

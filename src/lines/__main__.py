@@ -5,7 +5,7 @@ Lines Plan Generation for Keelboat.
 Generates a traditional lines plan with three classic views:
 - Profile (side elevation, YZ plane) — hull outline with waterline, keel, rudder
 - Body plan (cross-sections, XZ plane) — hull sections at evenly spaced stations
-- Half-breadth plan (top view, YX plane) — waterlines at several heights
+- Full-breadth plan (top view, YX plane) — waterlines at several heights
 
 Uses FreeCAD Part.slice() to cut shapes with planes and exports SVGs.
 Generates a LaTeX document wrapping the SVGs into a single PDF.
@@ -69,7 +69,7 @@ def get_section_positions(params):
 
 def get_waterline_positions(params):
     """
-    Get Z positions for waterline cuts (half-breadth plan).
+    Get Z positions for waterline cuts (full-breadth plan).
     Returns list of (name, z_position) tuples.
     """
     hull_depth = params.get('hull_depth', 900)
@@ -445,9 +445,15 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
         normal = App.Vector(1, 0, 0)
         wires = slice_shapes_safely(shapes, normal, 1.0)  # Small offset from centerline
         if wires:
+            # Full version with mast (for summary page and website)
+            svg_path = os.path.join(output_dir, f"{base_name}.profile.full.svg")
+            export_wires_to_svg(wires, svg_path, view='YZ')
+            print(f"  Exported profile (full): {svg_path}", flush=True)
+
+            # Clipped version without mast (for full-page detail)
             svg_path = os.path.join(output_dir, f"{base_name}.profile.svg")
             export_wires_to_svg(wires, svg_path, view='YZ', clip_z=clip_z)
-            print(f"  Exported profile: {svg_path}", flush=True)
+            print(f"  Exported profile (clipped): {svg_path}", flush=True)
         else:
             print("  Warning: No wires for profile view", flush=True)
     except Exception as e:
@@ -478,25 +484,29 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
             print(f"  Error exporting section '{name}': {e}", flush=True)
             traceback.print_exc()
 
-    # Export combined body plan (all sections overlayed with gradient colors)
+    # Export combined body plan (all sections overlayed in black)
     print("Exporting combined body plan...", flush=True)
     try:
         normal = App.Vector(0, 1, 0)
         wire_groups = []
-        num_sections = len(section_positions)
-        for i, (name, y_pos) in enumerate(section_positions):
+        for name, y_pos in section_positions:
             wires = slice_shapes_safely(shapes, normal, y_pos)
             if wires:
-                grey = int(200 - (180 * i / max(num_sections - 1, 1)))
-                color = f'#{grey:02x}{grey:02x}{grey:02x}'
-                wire_groups.append((wires, color))
+                wire_groups.append((wires, 'black'))
 
         if wire_groups:
+            # Full version with mast (for summary page and website)
+            svg_path = os.path.join(output_dir, f"{base_name}.bodyplan.full.svg")
+            export_wire_groups_to_svg(
+                wire_groups, svg_path, view='XZ', target_size=600)
+            print(f"  Exported combined body plan (full): {svg_path}", flush=True)
+
+            # Clipped version without mast (for full-page detail)
             svg_path = os.path.join(output_dir, f"{base_name}.bodyplan.svg")
             export_wire_groups_to_svg(
                 wire_groups, svg_path, view='XZ',
                 target_size=600, clip_z=clip_z)
-            print(f"  Exported combined body plan: {svg_path}", flush=True)
+            print(f"  Exported combined body plan (clipped): {svg_path}", flush=True)
     except Exception as e:
         import traceback
         print(f"  Error exporting combined body plan: {e}", flush=True)
@@ -506,7 +516,7 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
     # 3. Half-breadth plan (top view) — slices perpendicular to Z axis
     # =========================================================================
     waterline_positions = get_waterline_positions(params)
-    print(f"Exporting {len(waterline_positions)} half-breadth waterlines...", flush=True)
+    print(f"Exporting {len(waterline_positions)} full-breadth waterlines...", flush=True)
 
     # Export individual waterline SVGs
     for name, z_pos in waterline_positions:
@@ -525,27 +535,24 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
             print(f"  Error exporting waterline '{name}': {e}", flush=True)
             traceback.print_exc()
 
-    # Export combined half-breadth plan (all waterlines overlayed)
-    print("Exporting combined half-breadth plan...", flush=True)
+    # Export combined full-breadth plan (all waterlines overlayed)
+    print("Exporting combined full-breadth plan...", flush=True)
     try:
         normal = App.Vector(0, 0, 1)
         wire_groups = []
-        num_wl = len(waterline_positions)
-        for i, (name, z_pos) in enumerate(waterline_positions):
+        for name, z_pos in waterline_positions:
             wires = slice_shapes_safely(shapes, normal, z_pos)
             if wires:
-                grey = int(200 - (180 * i / max(num_wl - 1, 1)))
-                color = f'#{grey:02x}{grey:02x}{grey:02x}'
-                wire_groups.append((wires, color))
+                wire_groups.append((wires, 'black'))
 
         if wire_groups:
-            svg_path = os.path.join(output_dir, f"{base_name}.halfbreadth.svg")
+            svg_path = os.path.join(output_dir, f"{base_name}.fullbreadth.svg")
             export_wire_groups_to_svg(wire_groups, svg_path, view='YX',
                                      target_size=800)
-            print(f"  Exported combined half-breadth: {svg_path}", flush=True)
+            print(f"  Exported combined full-breadth: {svg_path}", flush=True)
     except Exception as e:
         import traceback
-        print(f"  Error exporting combined half-breadth: {e}", flush=True)
+        print(f"  Error exporting combined full-breadth: {e}", flush=True)
         traceback.print_exc()
 
     # =========================================================================
@@ -640,7 +647,7 @@ def generate_latex(boat_name, config_name, params, sections, waterlines,
             f"}}{{%\n"
             f"    \\textit{{(Waterline {escape_latex(name)}: see {escape_latex(base_name)}.FCStd)}}\n"
             f"}}\n"
-            f"\\caption{{Half-Breadth---Waterline {escape_latex(name)} (Z={z_pos:.0f}mm)}}\n"
+            f"\\caption{{Full-Breadth---Waterline {escape_latex(name)} (Z={z_pos:.0f}mm)}}\n"
             f"\\end{{figure}}"
         )
     waterline_figures_tex = "\n\n".join(waterline_figures)
@@ -662,8 +669,8 @@ def generate_latex(boat_name, config_name, params, sections, waterlines,
 \\noindent
 \\begin{{minipage}}[t]{{0.32\\textwidth}}
 \\subsection*{{Profile}}
-\\IfFileExists{{{base_name}.profile.pdf}}{{%
-\\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.profile.pdf}}
+\\IfFileExists{{{base_name}.profile.full.pdf}}{{%
+\\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.profile.full.pdf}}
 }}{{%
     \\textit{{(Profile: see {escape_latex(base_name)}.FCStd)}}
 }}
@@ -671,17 +678,17 @@ def generate_latex(boat_name, config_name, params, sections, waterlines,
 \\hfill
 \\begin{{minipage}}[t]{{0.22\\textwidth}}
 \\subsection*{{Body Plan}}
-\\IfFileExists{{{base_name}.bodyplan.pdf}}{{%
-\\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.bodyplan.pdf}}
+\\IfFileExists{{{base_name}.bodyplan.full.pdf}}{{%
+\\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.bodyplan.full.pdf}}
 }}{{%
     \\textit{{(Body plan)}}
 }}
 \\end{{minipage}}
 \\hfill
 \\begin{{minipage}}[t]{{0.38\\textwidth}}
-\\subsection*{{Half-Breadth Plan}}
-\\IfFileExists{{{base_name}.halfbreadth.pdf}}{{%
-\\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.halfbreadth.pdf}}
+\\subsection*{{Full-Breadth Plan}}
+\\IfFileExists{{{base_name}.fullbreadth.pdf}}{{%
+\\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.fullbreadth.pdf}}
 }}{{%
     \\textit{{(Half-breadth plan)}}
 }}
@@ -756,24 +763,34 @@ Ballast Ratio & {ballast_ratio * 100:.1f}\\% \\\\
 \\caption{{Profile---Centerline section (X=0)}}
 \\end{{figure}}
 
-%% ===== BODY PLAN SECTIONS =====
+%% ===== BODY PLAN =====
 \\newpage
 \\section*{{Body Plan}}
 
+\\begin{{figure}}[H]
+\\centering
+\\IfFileExists{{{base_name}.bodyplan.pdf}}{{%
+    \\includegraphics[width=0.95\\textwidth,height=0.85\\textheight,keepaspectratio]{{{base_name}.bodyplan.pdf}}
+}}{{%
+    \\textit{{(Body plan: see {escape_latex(base_name)}.FCStd)}}
+}}
+\\caption{{Combined body plan---All sections overlayed}}
+\\end{{figure}}
+
 {section_figures_tex}
 
-%% ===== HALF-BREADTH PLAN =====
+%% ===== FULL-BREADTH PLAN =====
 \\newpage
-\\section*{{Half-Breadth Plan}}
+\\section*{{Full-Breadth Plan}}
 
 \\begin{{figure}}[H]
 \\centering
-\\IfFileExists{{{base_name}.halfbreadth.pdf}}{{%
-    \\includegraphics[width=0.95\\textwidth,height=0.85\\textheight,keepaspectratio]{{{base_name}.halfbreadth.pdf}}
+\\IfFileExists{{{base_name}.fullbreadth.pdf}}{{%
+    \\includegraphics[width=0.95\\textwidth,height=0.85\\textheight,keepaspectratio]{{{base_name}.fullbreadth.pdf}}
 }}{{%
-    \\textit{{(Half-breadth plan: see {escape_latex(base_name)}.FCStd)}}
+    \\textit{{(Full-breadth plan: see {escape_latex(base_name)}.FCStd)}}
 }}
-\\caption{{Combined half-breadth plan---All waterlines overlayed}}
+\\caption{{Combined full-breadth plan---All waterlines overlayed}}
 \\end{{figure}}
 
 {waterline_figures_tex}

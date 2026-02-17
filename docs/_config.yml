@@ -1,8 +1,8 @@
 title: Keelboat
 description: Parametric Keelboat Design
 theme: jekyll-theme-cayman
-baseurl: ""
-url: ""
+baseurl: "/keelboat"
+url: "https://shipshape-marine.github.io"
 
 # Build settings
 markdown: kramdown
