@@ -4,3 +4,8 @@ artifact/
 __pycache__/
 *.pyc
 *.pyo
+docs/_site/
+docs/renders/
+docs/lines/
+docs/downloads/
+docs/_data/
