@@ -217,6 +217,7 @@ $(GZ_ARTIFACT): $(BUOYANCY_ARTIFACT) $(DESIGN_ARTIFACT) $(PARAMETER_ARTIFACT) | 
 		--hull-groups $(HULL_GROUPS_FILE) \
 		--output $@ \
 		--output-png $(GZ_PNG) \
+		--tolerance 0.10 \
 		--min-heel -90 \
 		--max-heel 90
 	@echo "✓ GZ curve: $@"
