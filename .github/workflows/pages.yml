@@ -61,8 +61,9 @@ jobs:
           WRAPPER_EOF
           chmod +x freecad-python
 
-          # Add to PATH
+          # Add to PATH and suppress Fontconfig warnings
           echo "$PWD" >> $GITHUB_PATH
+          echo "FONTCONFIG_FILE=/etc/fonts/fonts.conf" >> $GITHUB_ENV
 
       - name: Install Python dependencies
         run: |
