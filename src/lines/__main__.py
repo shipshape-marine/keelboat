@@ -47,8 +47,9 @@ def init_gui():
 
 def get_section_positions(params):
     """
-    Get Y positions for body plan section cuts (evenly spaced along hull).
-    Returns list of (name, y_position) tuples.
+    Get Y positions for body plan section cuts.
+    Evenly spaced along hull, plus an explicit cut at the mast position.
+    Returns list of (name, y_position) tuples sorted by Y position.
     """
     hull_length = params.get('hull_length', params.get('loa', 6100))
     num_sections = params.get('hull_sections', 7)
@@ -63,6 +64,14 @@ def get_section_positions(params):
         # Small offset to avoid slicing exactly at shape boundaries
         y_offset = y + 1.0 if abs(y) < 1 else y
         positions.append((f"stn_{i}", y_offset))
+
+    # Add mast station if it doesn't coincide with an existing station
+    mast_y = params.get('mast_y_position')
+    if mast_y is not None:
+        min_gap = hull_length / (num_sections - 1) * 0.3
+        if all(abs(y - mast_y) > min_gap for _, y in positions):
+            positions.append(("stn_mast", mast_y))
+            positions.sort(key=lambda p: p[1])
 
     return positions
 
@@ -443,7 +452,7 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
     print("Exporting profile view...", flush=True)
     try:
         normal = App.Vector(1, 0, 0)
-        wires = slice_shapes_safely(shapes, normal, 1.0)  # Small offset from centerline
+        wires = slice_shapes_safely(shapes, normal, 0.0)  # Exact centerline
         if wires:
             # Full version with mast (for summary page and website)
             svg_path = os.path.join(output_dir, f"{base_name}.profile.full.svg")
@@ -676,7 +685,7 @@ def generate_latex(boat_name, config_name, params, sections, waterlines,
 }}
 \\end{{minipage}}
 \\hfill
-\\begin{{minipage}}[t]{{0.22\\textwidth}}
+\\begin{{minipage}}[t]{{0.12\\textwidth}}
 \\subsection*{{Body Plan}}
 \\IfFileExists{{{base_name}.bodyplan.full.pdf}}{{%
 \\includegraphics[width=\\textwidth,keepaspectratio]{{{base_name}.bodyplan.full.pdf}}
@@ -792,6 +801,7 @@ Ballast Ratio & {ballast_ratio * 100:.1f}\\% \\\\
 }}
 \\caption{{Combined full-breadth plan---All waterlines overlayed}}
 \\end{{figure}}
+\\newpage
 
 {waterline_figures_tex}
 

@@ -168,7 +168,7 @@ hull_shape_table = [
     (0.85,   0.45,      0.65),   # bow transition
     (0.90,   0.30,      0.52),   # bow narrowing
     (0.95,   0.15,      0.40),   # near bow
-    (1.00,   0.02,      0.20),   # bow point
+    (1.00,   0.0001,    0.0001), # bow point (near-zero for sharp stem)
 ]
 
 

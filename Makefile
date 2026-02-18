@@ -77,6 +77,7 @@ help:
 	@echo "  make render     - Render images from colored design"
 	@echo "  make lines      - Generate lines plan (SVGs)"
 	@echo "  make lines-pdf  - Compile lines plan LaTeX to PDF"
+	@echo "  make step       - Export design to STEP format"
 	@echo "  make all        - Run full pipeline"
 	@echo "  make sync-docs  - Copy artifacts to docs/"
 	@echo "  make localhost  - Serve website locally"
@@ -307,6 +308,31 @@ lines-pdf: $(LINES_PDF)
 	@echo "✓ Lines plan PDF complete for $(BOAT).$(CONFIGURATION)"
 
 # ==============================================================================
+# STEP EXPORT
+# ==============================================================================
+
+STEP_DIR := $(SRC_DIR)/step
+STEP_SOURCE := $(wildcard $(STEP_DIR)/*.py)
+STEP_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).step.step
+
+$(STEP_ARTIFACT): $(DESIGN_ARTIFACT) $(STEP_SOURCE) | $(ARTIFACT_DIR)
+	@echo "Exporting STEP: $(BOAT).$(CONFIGURATION)"
+	@if [ "$(UNAME)" = "Darwin" ]; then \
+		bash $(STEP_DIR)/step_mac.sh \
+			"$(DESIGN_ARTIFACT)" \
+			"$(STEP_ARTIFACT)" \
+			"$(FREECAD_APP)"; \
+	else \
+		$(FREECAD_PYTHON) -m src.step \
+			--input "$(DESIGN_ARTIFACT)" \
+			--output "$(STEP_ARTIFACT)"; \
+	fi
+
+.PHONY: step
+step: $(STEP_ARTIFACT)
+	@echo "✓ STEP export complete: $(STEP_ARTIFACT)"
+
+# ==============================================================================
 # DOCS SYNC AND LOCAL PREVIEW
 # ==============================================================================
 
@@ -342,6 +368,11 @@ sync-docs:
 	@if ls artifact/*.FCStd 1>/dev/null 2>&1; then \
 		cp artifact/*.FCStd docs/downloads/; \
 		echo "  Copied $$(ls artifact/*.FCStd | wc -l | tr -d ' ') FCStd files to docs/downloads/"; \
+	fi
+	@# Copy STEP files
+	@if ls artifact/*.step 1>/dev/null 2>&1; then \
+		cp artifact/*.step docs/downloads/; \
+		echo "  Copied $$(ls artifact/*.step | wc -l | tr -d ' ') STEP files to docs/downloads/"; \
 	fi
 	@echo "✓ Docs sync complete"
 
