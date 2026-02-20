@@ -94,12 +94,20 @@ clean:
 	@echo "✓ Clean complete"
 
 # ==============================================================================
+# DEPENDENCY MANAGEMENT
+# ==============================================================================
+
+.deps: requirements.txt
+	pip install -r requirements.txt
+	@touch $@
+
+# ==============================================================================
 # PARAMETER COMPUTATION
 # ==============================================================================
 
 PARAMETER_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).parameter.json
 
-$(PARAMETER_ARTIFACT): $(BOAT_FILE) $(CONFIGURATION_FILE) $(SRC_DIR)/parameter/compute.py | $(ARTIFACT_DIR)
+$(PARAMETER_ARTIFACT): $(BOAT_FILE) $(CONFIGURATION_FILE) $(SRC_DIR)/parameter/compute.py .deps | $(ARTIFACT_DIR)
 	@echo "Computing parameters for $(BOAT).$(CONFIGURATION)..."
 	@PYTHONPATH=$(PWD) python3 -m shipshape.parameter \
 		--compute src.parameter.compute \
